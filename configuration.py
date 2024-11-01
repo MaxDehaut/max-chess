@@ -1,0 +1,18 @@
+"""
+All configuration constants/parameters
+"""
+BOARD_WIDTH = BOARD_HEIGHT = 512
+COLOR_BLACK = "lightblue"
+COLOR_HISTORY = "gray"
+COLOR_PATH = "yellow"
+COLOR_SELECTED = "salmon"
+COLOR_TARGET = "green"
+COLOR_WHITE = "white"
+DIMENSION = 8
+FONT_COLOR = "black"
+IMAGES = {}
+IMAGES_SET = "set-a"
+MAX_FPS = 15
+MOVE_PANEL_HEIGHT = BOARD_HEIGHT
+MOVE_PANEL_WIDTH = 250
+SQUARE_SIZE = BOARD_HEIGHT // DIMENSION
