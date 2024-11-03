@@ -6,6 +6,7 @@
 * [Prerequisites](#prerequisites)
 * [TODO](#todo)
 * [Instructions](#instructions)
+* [References](#references)
 
 ## Introduction
 
@@ -33,3 +34,7 @@
 **Additional moves:**
 * Press `z` to undo a move.
 * Press `r` to reset the game.
+
+## References
+
+* Supported colors: [pygame](https://www.pygame.org/docs/ref/color_list.html)

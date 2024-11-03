@@ -1,22 +1,28 @@
 """
 Main  file
 """
-import chess.game as cg
-import chess.AI as ai
-import configuration as cfg
-import pygame as p
 import sys
 from multiprocessing import Process, Queue
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import pygame
 
+from chess.configuration import ChessConfig
+
+import chess.game as cg
+import chess.AI as ai
+
+cfg = ChessConfig()
 
 def animate_move(move, screen, board, clock):
     """
     Animating a move
     """
     global colors
+
     d_row = move.end_row - move.start_row
     d_col = move.end_col - move.start_col
-    frames_per_square = 10
+    frames_per_square = 5
     frame_count = (abs(d_row) + abs(d_col)) * frames_per_square
 
     for frame in range(frame_count + 1):
@@ -27,18 +33,18 @@ def animate_move(move, screen, board, clock):
 
         # erase the piece moved from its ending square
         color = colors[(move.end_row + move.end_col) % 2]
-        end_square = p.Rect(move.end_col * cfg.SQUARE_SIZE,
+        end_square = pygame.Rect(move.end_col * cfg.SQUARE_SIZE,
                             move.end_row * cfg.SQUARE_SIZE,
                             cfg.SQUARE_SIZE,
                             cfg.SQUARE_SIZE)
-        p.draw.rect(screen, color, end_square)
+        pygame.draw.rect(screen, color, end_square)
 
         # draw captured piece onto rectangle
         if move.piece_captured != '--':
             if move.is_enpassant_move:
                 enpassant_row = move.end_row + 1 \
                     if move.piece_captured[0] == 'b' else move.end_row - 1
-                end_square = p.Rect(move.end_col * cfg.SQUARE_SIZE,
+                end_square = pygame.Rect(move.end_col * cfg.SQUARE_SIZE,
                                     enpassant_row * cfg.SQUARE_SIZE,
                                     cfg.SQUARE_SIZE,
                                     cfg. SQUARE_SIZE)
@@ -46,11 +52,11 @@ def animate_move(move, screen, board, clock):
 
         # draw moving piece
         screen.blit(cfg.IMAGES[move.piece_moved],
-                    p.Rect(col * cfg.SQUARE_SIZE,
+                    pygame.Rect(col * cfg.SQUARE_SIZE,
                            row * cfg.SQUARE_SIZE,
                            cfg.SQUARE_SIZE,
                            cfg.SQUARE_SIZE))
-        p.display.flip()
+        pygame.display.flip()
         clock.tick(60)
 
 def draw_board(screen):
@@ -58,41 +64,43 @@ def draw_board(screen):
     Draw the board
     """
     global colors
-    colors = [p.Color(cfg.COLOR_WHITE), p.Color(cfg.COLOR_BLACK)]
+
+    colors = [pygame.Color(cfg.COLOR_SQUARE_WHITE), pygame.Color(cfg.COLOR_SQUARE_BLACK)]
     for row in range(cfg.DIMENSION):
         for column in range(cfg.DIMENSION):
             color = colors[((row + column) % 2)]
-            p.draw.rect(screen, color, p.Rect(column * cfg.SQUARE_SIZE,
+            pygame.draw.rect(screen, color, pygame.Rect(column * cfg.SQUARE_SIZE,
                                               row * cfg.SQUARE_SIZE,
                                               cfg.SQUARE_SIZE,
                                               cfg.SQUARE_SIZE))
 
 def draw_endgame_text(screen, text):
-    font = p.font.SysFont("Helvetica", 32, True, False)
-    text_object = font.render(text, False, p.Color(cfg.FONT_COLOR))
-    text_location = p.Rect(0, 0,
+    font = pygame.font.SysFont(cfg.FONT_ENDTEXT, 32, True, False)
+    text_object = font.render(text, False, pygame.Color(cfg.COLOR_BLACK))
+    text_location = pygame.Rect(0, 0,
                            cfg.BOARD_WIDTH,
                            cfg.BOARD_HEIGHT).move(cfg.BOARD_WIDTH / 2 - text_object.get_width() / 2,
                                                   cfg.BOARD_HEIGHT / 2 - text_object.get_height() / 2)
     screen.blit(text_object, text_location)
-    text_object = font.render(text, False, p.Color(cfg.FONT_COLOR))
+    text_object = font.render(text, False, pygame.Color(cfg.COLOR_FONT))
     screen.blit(text_object, text_location.move(2, 2))
 
 def draw_move_history(screen, current_game, font):
     """
     Draws the move history
     """
-    move_history_rect = p.Rect(cfg.BOARD_WIDTH, 0, cfg.MOVE_PANEL_WIDTH, cfg.MOVE_PANEL_HEIGHT)
-    p.draw.rect(screen, p.Color(cfg.COLOR_HISTORY), move_history_rect)
+    move_history_rect = pygame.Rect(cfg.BOARD_WIDTH, 0, cfg.MOVE_PANEL_WIDTH, cfg.MOVE_PANEL_HEIGHT)
+    pygame.draw.rect(screen, pygame.Color(cfg.COLOR_HISTORY), move_history_rect)
     move_history = current_game.move_history
     move_texts = []
+
     for i in range(0, len(move_history), 2):
         move_string = str(i // 2 + 1) + '. ' + str(move_history[i]) + " "
         if i + 1 < len(move_history):
             move_string += str(move_history[i + 1]) + "  "
         move_texts.append(move_string)
 
-    moves_per_row = 3
+    moves_per_row = 1
     padding = 5
     line_spacing = 2
     text_y = padding
@@ -103,7 +111,7 @@ def draw_move_history(screen, current_game, font):
             if i + j < len(move_texts):
                 text += move_texts[i + j]
 
-        text_object = font.render(text, True, p.Color(cfg.FONT_COLOR))
+        text_object = font.render(text, True, pygame.Color(cfg.COLOR_FONT))
         text_location = move_history_rect.move(padding, text_y)
         screen.blit(text_object, text_location)
         text_y += text_object.get_height() + line_spacing
@@ -116,7 +124,7 @@ def draw_pieces(screen, board):
         for column in range(cfg.DIMENSION):
             piece = board[row][column]
             if piece != "--":
-                screen.blit(cfg.IMAGES[piece], p.Rect(column * cfg.SQUARE_SIZE,
+                screen.blit(cfg.IMAGES[piece], pygame.Rect(column * cfg.SQUARE_SIZE,
                                                       row * cfg.SQUARE_SIZE,
                                                       cfg.SQUARE_SIZE,
                                                       cfg.SQUARE_SIZE))
@@ -135,48 +143,52 @@ def load_images():
     """
     pieces = ['wP', 'wR', 'wN', 'wB', 'wK', 'wQ', 'bP', 'bR', 'bN', 'bB', 'bK', 'bQ']
     for piece in pieces:
-        cfg.IMAGES[piece] = p.transform.scale(p.image.load("images/" + cfg.IMAGES_SET + "/" + piece + ".png"), (cfg.SQUARE_SIZE, cfg.SQUARE_SIZE))
+        cfg.IMAGES[piece] = pygame.transform.scale(pygame.image.load("images/" + \
+                                                                     cfg.IMAGES_SET + "/" + \
+                                                                     piece + ".png"),
+                                                                     (cfg.SQUARE_SIZE, cfg.SQUARE_SIZE))
 
 def main():
     """
     Starting point
     """
-    p.init()
-    screen = p.display.set_mode((cfg.BOARD_WIDTH + cfg.MOVE_PANEL_WIDTH, cfg.BOARD_HEIGHT))
-    clock = p.time.Clock()
-    screen.fill(p.Color("white"))
-    move_history_font = p.font.SysFont("Arial", 14, False, False)
-    load_images()
 
-    current_game = cg.ChessGame()
-    valid_moves = current_game.get_valid_moves()
-
-    ai_thinking = False
-    animate = False
+    # Setting the local variables
     game_over = False
     move_finder_process = None
     move_made = False
     move_undone = False
-    player_one = False
-    player_two = False
     running = True
 
     square_selected = ()
     player_clicks = []
 
+    # Initialising the board
+    pygame.init()
+    screen = pygame.display.set_mode((cfg.BOARD_WIDTH + cfg.MOVE_PANEL_WIDTH, cfg.BOARD_HEIGHT))
+    screen.fill(pygame.Color(cfg.COLOR_SCREEN))
+    move_history_font = pygame.font.SysFont(cfg.FONT_HISTORY, 14, True, False)
+    load_images()
+
+    # Initialising the game
+    current_game = cg.ChessGame()
+    valid_moves = current_game.get_valid_moves()
+    clock = pygame.time.Clock()
+
     while running:
-        human_turn = (current_game.white_to_move and player_one) or (not current_game.white_to_move and player_two)
+        human_turn = (current_game.white_to_move and cfg.PLAYER_ONE) or \
+            (not current_game.white_to_move and cfg.PLAYER_TWO)
 
-        for e in p.event.get():
+        for e in pygame.event.get():
 
-            if e.type == p.QUIT:
-                p.quit()
+            if e.type == pygame.QUIT:
+                pygame.quit()
                 sys.exit()
 
-            elif e.type == p.MOUSEBUTTONDOWN:
+            elif e.type == pygame.MOUSEBUTTONDOWN:
 
                 if not game_over:
-                    location = p.mouse.get_pos()  # (x, y) location of the mouse
+                    location = pygame.mouse.get_pos()  # (x, y) location of the mouse
                     col = location[0] // cfg.SQUARE_SIZE
                     row = location[1] // cfg.SQUARE_SIZE
 
@@ -195,7 +207,7 @@ def main():
                             if move == valid_moves[i]:
                                 current_game.move_a_piece(valid_moves[i])
                                 move_made = True
-                                animate = True
+                                cfg.ANIMATE = True
                                 square_selected = ()  # reset user clicks
                                 player_clicks = []
 
@@ -203,35 +215,35 @@ def main():
                             player_clicks = [square_selected]
 
             # key handler
-            elif e.type == p.KEYDOWN:
+            elif e.type == pygame.KEYDOWN:
 
-                if e.key == p.K_z:  # undo when 'z' is pressed
+                if e.key == pygame.K_z:  # undo when 'z' is pressed
                     current_game.undo_move()
                     move_made = True
-                    animate = False
+                    cfg.ANIMATE = False
                     game_over = False
-                    if ai_thinking:
+                    if cfg.AI_THINKING:
                         move_finder_process.terminate()
-                        ai_thinking = False
+                        cfg.AI_THINKING = False
                     move_undone = True
 
-                if e.key == p.K_r:  # reset the game when 'r' is pressed
+                if e.key == pygame.K_r:  # reset the game when 'r' is pressed
                     current_game = cg.ChessGame()
                     valid_moves = current_game.get_valid_moves()
                     square_selected = ()
                     player_clicks = []
                     move_made = False
-                    animate = False
+                    cfg.ANIMATE = False
                     game_over = False
-                    if ai_thinking:
+                    if cfg.AI_THINKING:
                         move_finder_process.terminate()
-                        ai_thinking = False
+                        cfg.AI_THINKING = False
                     move_undone = True
 
         # AI move finder
         if not game_over and not human_turn and not move_undone:
-            if not ai_thinking:
-                ai_thinking = True
+            if not cfg.AI_THINKING:
+                cfg.AI_THINKING = True
                 return_queue = Queue()  # used to pass data between threads
                 move_finder_process = Process(target=ai.findBestMove,
                                               args=(current_game,
@@ -245,16 +257,16 @@ def main():
                     ai_move = ai.findRandomMove(valid_moves)
                 current_game.move_a_piece(ai_move)
                 move_made = True
-                animate = True
-                ai_thinking = False
+                cfg.ANIMATE = True
+                cfg.AI_THINKING = False
 
         if move_made:
-            if animate:
+            if cfg.ANIMATE:
                 animate_move(current_game.move_history[-1], screen, current_game.board, clock)
             valid_moves = current_game.get_valid_moves()
             move_made = False
-            animate = False
             move_undone = False
+            cfg.ANIMATE = False
 
         get_board_ready(screen, current_game, valid_moves, square_selected)
 
@@ -273,7 +285,7 @@ def main():
             draw_endgame_text(screen, "Stalemate")
 
         clock.tick(cfg.MAX_FPS)
-        p.display.flip()
+        pygame.display.flip()
 
 def set_highlighted(screen, current_game, valid_moves, square_selected):
     """
@@ -281,9 +293,9 @@ def set_highlighted(screen, current_game, valid_moves, square_selected):
     """
     if (len(current_game.move_history)) > 0:
         last_move = current_game.move_history[-1]
-        s = p.Surface((cfg.SQUARE_SIZE, cfg.SQUARE_SIZE))
+        s = pygame.Surface((cfg.SQUARE_SIZE, cfg.SQUARE_SIZE))
         s.set_alpha(100)
-        s.fill(p.Color(cfg.COLOR_SELECTED))
+        s.fill(pygame.Color(cfg.COLOR_SELECTED))
         screen.blit(s, (last_move.end_col * cfg.SQUARE_SIZE, last_move.end_row * cfg.SQUARE_SIZE))
 
     if square_selected != ():
@@ -292,15 +304,15 @@ def set_highlighted(screen, current_game, valid_moves, square_selected):
         if current_game.board[row][col][0] == (
                 # square_selected is a piece that can be moved
                 'w' if current_game.white_to_move else 'b'):
-            s = p.Surface((cfg.SQUARE_SIZE, cfg.SQUARE_SIZE))
+            s = pygame.Surface((cfg.SQUARE_SIZE, cfg.SQUARE_SIZE))
 
             # transparency value 0 -> transparent, 255 -> opaque
             s.set_alpha(100)
-            s.fill(p.Color(cfg.COLOR_TARGET))
+            s.fill(pygame.Color(cfg.COLOR_TARGET))
             screen.blit(s, (col * cfg.SQUARE_SIZE, row * cfg.SQUARE_SIZE))
 
             # highlight moves from that square
-            s.fill(p.Color(cfg.COLOR_PATH))
+            s.fill(pygame.Color(cfg.COLOR_PATH))
             for move in valid_moves:
                 if move.start_row == row and move.start_col == col:
                     screen.blit(s, (move.end_col * cfg.SQUARE_SIZE, move.end_row * cfg.SQUARE_SIZE))
