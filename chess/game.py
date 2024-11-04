@@ -1,8 +1,9 @@
 """
 Represent a typical chess game
 """
+import datetime, pickle, random, string
 from .move import ChessMove
-import numpy as np
+
 
 class ChessGame:
 
@@ -31,15 +32,17 @@ class ChessGame:
                                              self.current_rook_rights.bqs)]
         self.enpassant_possible = ()
         self.enpassant_possible_history = [self.enpassant_possible]
+        self.game_id = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
         self.in_check = False
         self.location_king_black = (0, 4)
         self.location_king_white = (7, 4)
-        self.move_functions = {"P": self.get_pawn_moves,
-                              "R": self.get_rook_moves,
-                              "N": self.get_knight_moves,
-                              "B": self.get_bishop_moves,
-                              "Q": self.get_queen_moves,
-                              "K": self.get_king_moves}
+        self.move_functions = {
+            "P": self.get_pawn_moves,
+            "R": self.get_rook_moves,
+            "N": self.get_knight_moves,
+            "B": self.get_bishop_moves,
+            "Q": self.get_queen_moves,
+            "K": self.get_king_moves }
         self.move_history = []
         self.pins = []
         self.stalemate = False
@@ -570,6 +573,42 @@ class ChessGame:
         if self.board[row][col - 1] == '--' and self.board[row][col - 2] == '--' and self.board[row][col - 3] == '--':
             if not self.square_under_attack(row, col - 1) and not self.square_under_attack(row, col - 2):
                 moves.append(ChessMove((row, col), (row, col - 2), self.board, is_castle_move=True))
+
+    def load_game(self, board_filename):
+        """
+        Loads a chess board previsouly serialised
+        """
+        with open(board_filename, 'rb') as file:
+            self.board = pickle.load(file)
+    
+    def save_game(self, path, game=True, history=False):
+        """
+        Saves the current chess board
+        """
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        filename_board = f"{path}/games/{current_date}_{self.game_id}_game.pkl"
+        filename_board_text = f"{path}/games/{current_date}_{self.game_id}_game.txt"
+        filename_history = f"{path}/history/{current_date}_{self.game_id}_hist.pkl"
+        filename_history_text = f"{path}/history/{current_date}_{self.game_id}_hist.txt"
+
+        if game:
+            # Serialize board to file
+            with open(filename_board, 'wb') as file:
+                pickle.dump(self.board, file)
+        
+            # Save board to text file
+            with open(filename_board_text, 'w', encoding="utf-8") as file:
+                for item in self.board:
+                    file.write(f"{item}\n")
+        if history:
+            # Serialize history to file
+            with open(filename_history, 'wb') as file:
+                pickle.dump(self.move_history, file)
+
+            # Save history to text file
+            with open(filename_history_text, 'w', encoding="utf-8") as file:
+                for item in self.move_history:
+                    file.write(f"{item}\n")
 
 
 class RookRights:

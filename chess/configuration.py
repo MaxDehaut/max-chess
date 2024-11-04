@@ -16,7 +16,7 @@ class ChessConfig:
         self.DIMENSION = 8
         self.IMAGES = {}
         self.IMAGES_SET = "set-a"
-        self.MAX_FPS = 15
+        self.MAX_FPS = 10
         self.MOVE_PANEL_HEIGHT = self.BOARD_HEIGHT
         self.MOVE_PANEL_WIDTH = 250
         self.PLAYER_ONE = False

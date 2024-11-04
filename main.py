@@ -143,7 +143,7 @@ def load_images():
     """
     pieces = ['wP', 'wR', 'wN', 'wB', 'wK', 'wQ', 'bP', 'bR', 'bN', 'bB', 'bK', 'bQ']
     for piece in pieces:
-        cfg.IMAGES[piece] = pygame.transform.scale(pygame.image.load("images/" + \
+        cfg.IMAGES[piece] = pygame.transform.scale(pygame.image.load("chess/images/" + \
                                                                      cfg.IMAGES_SET + "/" + \
                                                                      piece + ".png"),
                                                                      (cfg.SQUARE_SIZE, cfg.SQUARE_SIZE))
@@ -174,6 +174,8 @@ def main():
     current_game = cg.ChessGame()
     valid_moves = current_game.get_valid_moves()
     clock = pygame.time.Clock()
+
+    print( type(current_game.board) )
 
     while running:
         human_turn = (current_game.white_to_move and cfg.PLAYER_ONE) or \
@@ -217,6 +219,9 @@ def main():
             # key handler
             elif e.type == pygame.KEYDOWN:
 
+                if e.key == pygame.K_s:  # undo when 's' is pressed
+                    current_game.save_game(path="chess/save", game=True, history=False)
+
                 if e.key == pygame.K_z:  # undo when 'z' is pressed
                     current_game.undo_move()
                     move_made = True
@@ -242,10 +247,11 @@ def main():
 
         # AI move finder
         if not game_over and not human_turn and not move_undone:
+
             if not cfg.AI_THINKING:
                 cfg.AI_THINKING = True
                 return_queue = Queue()  # used to pass data between threads
-                move_finder_process = Process(target=ai.findBestMove,
+                move_finder_process = Process(target=ai.find_best_move,
                                               args=(current_game,
                                                     valid_moves,
                                                     return_queue))
@@ -254,7 +260,7 @@ def main():
             if not move_finder_process.is_alive():
                 ai_move = return_queue.get()
                 if ai_move is None:
-                    ai_move = ai.findRandomMove(valid_moves)
+                    ai_move = ai.find_random_move(valid_moves)
                 current_game.move_a_piece(ai_move)
                 move_made = True
                 cfg.ANIMATE = True
@@ -283,6 +289,9 @@ def main():
         elif current_game.stalemate:
             game_over = True
             draw_endgame_text(screen, "Stalemate")
+
+        if game_over:
+            current_game.save_game(path="chess/save", game=True, history=True)
 
         clock.tick(cfg.MAX_FPS)
         pygame.display.flip()

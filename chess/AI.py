@@ -66,30 +66,38 @@ STALEMATE = 0
 DEPTH = 3
 
 
-def findBestMove(current_game, valid_moves, return_queue):
-
+def find_best_move(current_game, valid_moves, return_queue):
+    """
+    Finds the best move
+    """
     global next_move
 
     next_move = None
     random.shuffle(valid_moves)
-    findMoveNegaMaxAlphaBeta(current_game, valid_moves, DEPTH, -CHECKMATE, CHECKMATE,
-                             1 if current_game.white_to_move else -1)
+    find_move(current_game,
+              valid_moves,
+              DEPTH,
+              -CHECKMATE,
+              CHECKMATE,
+              1 if current_game.white_to_move else -1)
     return_queue.put(next_move)
 
 
-def findMoveNegaMaxAlphaBeta(current_game, valid_moves, depth, alpha, beta, turn_multiplier):
-
+def find_move(current_game, valid_moves, depth, alpha, beta, turn_multiplier):
+    """
+    Finds the ideal move
+    """
     global next_move
 
     if depth == 0:
-        return turn_multiplier * scoreBoard(current_game)
+        return turn_multiplier * score_board(current_game)
 
     # move ordering - implement later //TODO
     max_score = -CHECKMATE
     for move in valid_moves:
         current_game.move_a_piece(move)
         next_moves = current_game.get_valid_moves()
-        score = -findMoveNegaMaxAlphaBeta(current_game, next_moves, depth - 1, -beta, -alpha, -turn_multiplier)
+        score = -find_move(current_game, next_moves, depth - 1, -beta, -alpha, -turn_multiplier)
         if score > max_score:
             max_score = score
             if depth == DEPTH:
@@ -102,7 +110,7 @@ def findMoveNegaMaxAlphaBeta(current_game, valid_moves, depth, alpha, beta, turn
     return max_score
 
 
-def scoreBoard(current_game):
+def score_board(current_game):
     """
     Score the board. A positive score is good for white, a negative score is good for black.
     """
@@ -130,7 +138,7 @@ def scoreBoard(current_game):
     return score
 
 
-def findRandomMove(valid_moves):
+def find_random_move(valid_moves):
     """
     Picks and returns a random valid move.
     """

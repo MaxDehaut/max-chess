@@ -12,6 +12,7 @@ class ChessMove:
                       "6": 2,
                       "7": 1,
                       "8": 0 }
+
     files_to_cols = { "a": 0,
                       "b": 1,
                       "c": 2,
@@ -22,7 +23,7 @@ class ChessMove:
                       "h": 7 }
 
     rows_to_ranks = { v: k for k, v in ranks_to_rows.items() }
-    cols_to_files = {v: k for k, v in files_to_cols.items()}
+    cols_to_files = { v: k for k, v in files_to_cols.items() }
 
     def __init__(self, start_square, end_square, board, is_enpassant_move=False, is_castle_move=False):
         self.start_row = start_square[0]
@@ -70,13 +71,13 @@ class ChessMove:
             return self.get_rank_file(self.start_row, self.start_col)[0] + "x" + self.get_rank_file(self.end_row,
                                                                                                 self.end_col) + " e.p."
         if self.piece_captured != "--":
-            if self.piece_moved[1] == "p":
+            if self.piece_moved[1] == "P":
                 return self.get_rank_file(self.start_row, self.start_col)[0] + "x" + self.get_rank_file(self.end_row,
                                                                                                     self.end_col)
             else:
                 return self.piece_moved[1] + "x" + self.get_rank_file(self.end_row, self.end_col)
         else:
-            if self.piece_moved[1] == "p":
+            if self.piece_moved[1] == "P":
                 return self.get_rank_file(self.end_row, self.end_col)
             else:
                 return self.piece_moved[1] + self.get_rank_file(self.end_row, self.end_col)
@@ -92,7 +93,7 @@ class ChessMove:
 
         end_square = self.get_rank_file(self.end_row, self.end_col)
 
-        if self.piece_moved[1] == "p":
+        if self.piece_moved[1] == "P":
             if self.is_capture:
                 return self.cols_to_files[self.start_col] + "x" + end_square
             else:
