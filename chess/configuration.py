@@ -9,6 +9,7 @@ class ChessConfig:
         """
         self.AI_THINKING = False
         self.ANIMATE = False
+        self.AUTO = True
         self.BOARD_HEIGHT = 512
         self.BOARD_WIDTH = 512
         self.CHECKMATE = 1000
@@ -17,13 +18,13 @@ class ChessConfig:
         self.IMAGES = {}
         self.IMAGES_SET = "set-a"
         self.MAX_FPS = 10
+        self.MAX_GAME = 100 # Maximum number of games that will be played in auto mode 
         self.MOVE_PANEL_HEIGHT = self.BOARD_HEIGHT
         self.MOVE_PANEL_WIDTH = 250
         self.PLAYER_ONE = False
         self.PLAYER_TWO = False
         self.SQUARE_SIZE = self.BOARD_HEIGHT // self.DIMENSION
         self.STALEMATE = 0
-        self.WITH_UI = False
 
         # COLORS
         self.COLOR_BLACK = "black"

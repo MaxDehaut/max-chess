@@ -148,17 +148,20 @@ def load_images():
                                                                      piece + ".png"),
                                                                      (cfg.SQUARE_SIZE, cfg.SQUARE_SIZE))
 
-def main():
+def start_ui():
     """
     Starting point
     """
 
     # Setting the local variables
+    clock = None
     game_over = False
     move_finder_process = None
+    move_history_font = None
     move_made = False
     move_undone = False
     running = True
+    screen = None
 
     square_selected = ()
     player_clicks = []
@@ -169,13 +172,11 @@ def main():
     screen.fill(pygame.Color(cfg.COLOR_SCREEN))
     move_history_font = pygame.font.SysFont(cfg.FONT_HISTORY, 14, True, False)
     load_images()
+    clock = pygame.time.Clock()
 
     # Initialising the game
     current_game = cg.ChessGame()
     valid_moves = current_game.get_valid_moves()
-    clock = pygame.time.Clock()
-
-    print( type(current_game.board) )
 
     while running:
         human_turn = (current_game.white_to_move and cfg.PLAYER_ONE) or \
@@ -296,6 +297,52 @@ def main():
         clock.tick(cfg.MAX_FPS)
         pygame.display.flip()
 
+def start_auto(nbr_game = None):
+    """
+    Starting point for an
+    """
+    if nbr_game is None:
+        nbr_game = cfg.MAX_GAME
+
+    for game in range(nbr_game):
+
+        print(f"Game #{game}")
+        # Setting the local variables
+        move_finder_process = None
+        move_made = False
+        running = True
+
+        # Initialising the game
+        current_game = cg.ChessGame()
+        valid_moves = current_game.get_valid_moves()
+
+        while running:
+
+            if not cfg.AI_THINKING:
+                cfg.AI_THINKING = True
+                return_queue = Queue()  # used to pass data between threads
+                move_finder_process = Process(target=ai.find_best_move,
+                                              args=(current_game,
+                                                    valid_moves,
+                                                    return_queue))
+                move_finder_process.start()
+
+            if not move_finder_process.is_alive():
+                ai_move = return_queue.get()
+                if ai_move is None:
+                    ai_move = ai.find_random_move(valid_moves)
+                current_game.move_a_piece(ai_move)
+                move_made = True
+                cfg.AI_THINKING = False
+
+            if move_made:
+                valid_moves = current_game.get_valid_moves()
+                move_made = False
+
+            if current_game.checkmate or current_game.stalemate:
+                current_game.save_game(path="chess/save", game=True, history=True)
+                running = False
+
 def set_highlighted(screen, current_game, valid_moves, square_selected):
     """
     Highlight selected square
@@ -327,4 +374,9 @@ def set_highlighted(screen, current_game, valid_moves, square_selected):
                     screen.blit(s, (move.end_col * cfg.SQUARE_SIZE, move.end_row * cfg.SQUARE_SIZE))
 
 if __name__ == "__main__":
-    main()
+
+    if cfg.AUTO:
+        start_auto()
+
+    else:
+        start_ui()

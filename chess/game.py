@@ -76,7 +76,7 @@ class ChessGame:
             self.board[move.start_row][move.end_col] = "--"  # capturing the pawn
 
         # update enpassant_possible variable
-        if move.piece_moved[1] == "p" and abs(move.start_row - move.end_row) == 2:  # only on 2 square pawn advance
+        if move.piece_moved[1] == "P" and abs(move.start_row - move.end_row) == 2:  # only on 2 square pawn advance
             self.enpassant_possible = ((move.start_row + move.end_row) // 2, move.start_col)
         else:
             self.enpassant_possible = ()
@@ -580,22 +580,22 @@ class ChessGame:
         """
         with open(board_filename, 'rb') as file:
             self.board = pickle.load(file)
-    
+
     def save_game(self, path, game=True, history=False):
         """
         Saves the current chess board
         """
         current_date = datetime.datetime.now().strftime("%Y-%m-%d")
-        filename_board = f"{path}/games/{current_date}_{self.game_id}_game.pkl"
-        filename_board_text = f"{path}/games/{current_date}_{self.game_id}_game.txt"
-        filename_history = f"{path}/history/{current_date}_{self.game_id}_hist.pkl"
-        filename_history_text = f"{path}/history/{current_date}_{self.game_id}_hist.txt"
+        filename_board = f"{path}/games/pkl/{current_date}_{self.game_id}_game.pkl"
+        filename_board_text = f"{path}/games/txt/{current_date}_{self.game_id}_game.txt"
+        filename_history = f"{path}/history/pkl/{current_date}_{self.game_id}_hist.pkl"
+        filename_history_text = f"{path}/history/txt/{current_date}_{self.game_id}_hist.txt"
 
         if game:
             # Serialize board to file
             with open(filename_board, 'wb') as file:
                 pickle.dump(self.board, file)
-        
+
             # Save board to text file
             with open(filename_board_text, 'w', encoding="utf-8") as file:
                 for item in self.board:
