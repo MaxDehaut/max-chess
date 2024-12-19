@@ -23,6 +23,7 @@ class ChessConfig:
         self.PLAYER_TWO = False
         self.SQUARE_SIZE = self.BOARD_HEIGHT // self.DIMENSION
         self.STALEMATE = 0
+        self.WITH_UI = False
 
         # COLORS
         self.COLOR_BLACK = "black"
